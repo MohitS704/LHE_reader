@@ -1,0 +1,16 @@
+import re
+import os
+import functools
+import random
+import warnings
+
+
+class lhe_event(object):
+    def __init__(self, event) -> None:
+        self.original_string = event
+
+        self.first_row_properties = re.compile(r'filler')
+
+        self.event_quantities = re.compile(r'filler')
+
+        

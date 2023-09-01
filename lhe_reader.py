@@ -5,7 +5,7 @@ import random
 import warnings
 
 class lhe_reader(object):
-    def __init__(self, lhefile, LHE_analyzer=None) -> None:
+    def __init__(self, lhefile) -> None:
         """A class to read LHE files and perform cursory operations like 
         cutting down to size, checking equality, and ROOT conversion
 
@@ -27,9 +27,7 @@ class lhe_reader(object):
         
         self.lhefile = os.path.abspath(lhefile)
         self.event_selection_regex = re.compile(r'(?s)(<event>(.*?)</event>)') #regular expression to find every event
-        
-        self.lhe_analyzer = LHE_analyzer
-        
+                
         with open(self.lhefile) as f:
             self.text = f.read()
         
@@ -69,7 +67,7 @@ class lhe_reader(object):
         list[str]
             A list of every event sequence as strings from the file (everything between every <event> and </event>)
         """
-        all_matches = re.findall(self.event_selection_regex, self.text)
+        all_matches = re.findall(self.event_selection_regex, self.text) #A regex is faster than a for loop!
         all_matches = [item[0] for item in all_matches]
         return all_matches
     
@@ -183,10 +181,10 @@ class lhe_reader(object):
         if n == orig_num:
             return start_of_file + ("\n".join(self.all_events)) + end_of_file
         elif n > orig_num:
-            warnings.warn("The number of events selected is > the number of events in the file")
+            warnings.warn("The number of events selected is > the number of events in the file! Returning the original file...")
             return start_of_file + ("\n".join(self.all_events)) + end_of_file #just return the whole file
         elif n <= 0:
-            raise ValueError("Selecting <= 0 events makes literally no sense")
+            raise ValueError("Selecting <= 0 events!")
         
         if verbose:
             print("{:.3e}".format(orig_num), "events ->", "{:.3e}".format(n), "events")
