@@ -3,6 +3,7 @@ import os
 import functools
 import random
 import warnings
+import lhe_event
 
 class lhe_reader(object):
     def __init__(self, lhefile) -> None:
@@ -31,6 +32,10 @@ class lhe_reader(object):
         with open(self.lhefile) as f:
             self.text = f.read()
         
+        all_matches = re.findall(self.event_selection_regex, self.text) #A regex is faster than a for loop!
+        all_matches = [item[0] for item in all_matches]
+        self.all_events = all_matches
+        
     @functools.cached_property 
     def cross_section(self):
         """Gets the cross section and its uncertainty using regular expressions
@@ -55,21 +60,6 @@ class lhe_reader(object):
         uncertainty = cross_section_match.group(3)
         
         return float(cross_section), float(uncertainty) #returns the cross section and its uncertainty
-    
-    @functools.cached_property 
-    def all_events(self):
-        """This function opens and collects every LHE event and puts them in a list to return
-        Attribute is stored as a cached property
-        https://docs.python.org/dev/library/functools.html#functools.cached_property
-        
-        Returns
-        -------
-        list[str]
-            A list of every event sequence as strings from the file (everything between every <event> and </event>)
-        """
-        all_matches = re.findall(self.event_selection_regex, self.text) #A regex is faster than a for loop!
-        all_matches = [item[0] for item in all_matches]
-        return all_matches
     
     @functools.cached_property
     def num_events(self):
@@ -202,9 +192,9 @@ class lhe_reader(object):
         
         return written_file #this would be placed directly into a file
 
-    @classmethod
-    def analyzed_events(self):
-        if self.lhe_analyzer == None:
-            raise ValueError("Need to assign an analyzer class to analyze events!")
-        for event in self.all_events():
-            self.lhe_analyzer(event, False)
+    @functools.cached_property
+    def processed_events(self):
+        processed_temp = []
+        for event in self.all_events:
+            processed_temp.append(lhe_event.lhe_event(event))
+        return processed_temp
